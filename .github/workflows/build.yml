@@ -150,6 +150,9 @@ jobs:
         
         git clone --recurse-submodules https://github.com/frida/frida
         cd frida
+        git checkout 17.9.8
+        git submodule update --init --recursive
+        cd ..
         for path in ../patches/*
         do
           name=$(basename $path)
