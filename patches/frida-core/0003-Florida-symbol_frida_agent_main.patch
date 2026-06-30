@@ -1,3 +1,11 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Florida <florida@example.com>
+Date: Mon, 30 Jun 2026 00:00:00 +0000
+Subject: [PATCH 3/6] Florida: symbol_frida_agent_main
+
+warning: in the working copy of 'src/darwin/darwin-host-session.vala', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/linux/linux-host-session.vala', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/windows/windows-host-session.vala', LF will be replaced by CRLF the next time Git touches it
 diff --git a/src/darwin/darwin-host-session.vala b/src/darwin/darwin-host-session.vala
 index 3d18cf0..b7d7b9a 100644
 --- a/src/darwin/darwin-host-session.vala
@@ -42,3 +50,6 @@ index 167ea74..3b503f3 100644
  				make_agent_parameters (pid, t.remote_address, options),
  				installed_agent_dependencies (), cancellable);
  #endif
+
+-- 
+2.34.1
