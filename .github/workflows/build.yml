@@ -152,7 +152,6 @@ jobs:
         cd frida
         git checkout 17.9.8
         git submodule update --init --recursive
-        cd ..
         for path in ../patches/*
         do
           name=$(basename $path)
