@@ -5,49 +5,45 @@ Subject: [PATCH 3/6] Florida: symbol_frida_agent_main
 
 ---
  src/darwin/darwin-host-session.vala   | 2 +-
- src/freebsd/freebsd-host-session.vala | 2 +-
  src/linux/linux-host-session.vala     | 2 +-
- src/qnx/qnx-host-session.vala         | 2 +-
  src/windows/windows-host-session.vala | 4 ++--
- 5 files changed, 6 insertions(+), 6 deletions(-)
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/src/darwin/darwin-host-session.vala b/src/darwin/darwin-host-session.vala
 index 1234567..abcdefg 100644
 --- a/src/darwin/darwin-host-session.vala
 +++ b/src/darwin/darwin-host-session.vala
 @@ -295,7 +295,7 @@ namespace Frida {
- 		}
+ 		private async uint inject_agent (uint pid, string agent_parameters, Cancellable? cancellable) throws Error, IOError {
+ 			uint id;
  
- 		private async uint inject_agent (uint pid, string agent_path, Cancellable? cancellable) throws Error, IOError {
 -			unowned string entrypoint = "frida_agent_main";
 +			unowned string entrypoint = "main";
- 			return yield fruitjector.inject_library_resource (pid, agent_desc, entrypoint, make_parameters (), cancellable);
- 		}
- 
+ #if HAVE_EMBEDDED_ASSETS
+ 			id = yield fruitjector.inject_library_resource (pid, agent, entrypoint, agent_parameters, cancellable);
 diff --git a/src/linux/linux-host-session.vala b/src/linux/linux-host-session.vala
 index 1234567..abcdefg 100644
 --- a/src/linux/linux-host-session.vala
 +++ b/src/linux/linux-host-session.vala
 @@ -387,7 +387,7 @@ namespace Frida {
- 		}
+ 		private async uint inject_agent (uint pid, string agent_parameters, Cancellable? cancellable) throws Error, IOError {
+ 			uint id;
  
- 		private async uint inject_agent (uint pid, string agent_path, Cancellable? cancellable) throws Error, IOError {
 -			string entrypoint = "frida_agent_main";
 +			string entrypoint = "main";
- 			return yieldlinjector.inject_library_resource (pid, agent_desc, entrypoint, make_parameters (), cancellable);
- 		}
- 
+ #if HAVE_EMBEDDED_ASSETS
+ 			id = yieldlinjector.inject_library_resource (pid, agent, entrypoint, agent_parameters, cancellable);
 diff --git a/src/windows/windows-host-session.vala b/src/windows/windows-host-session.vala
 index 1234567..abcdefg 100644
 --- a/src/windows/windows-host-session.vala
 +++ b/src/windows/windows-host-session.vala
 @@ -251,10 +251,10 @@ namespace Frida {
- 		private async uint inject_agent (uint pid, string agent_path, Cancellable? cancellable) throws Error, IOError {
+ 		private async uint inject_agent (uint pid, string agent_parameters, Cancellable? cancellable) throws Error, IOError {
  #if WINDOWS
  			var agent = agent_desc;
 -			var id = yield winjector.inject_library_resource (pid, agent, "frida_agent_main",
 +			var id = yield winjector.inject_library_resource (pid, agent, "main",
- 				make_parameters (), cancellable);
+ 				agent_parameters, cancellable);
  			if (temporary_agent_path != null) {
 -				winjector.rename_temporary (installed_agent_path_template (), "frida_agent_main",
 +				winjector.rename_temporary (installed_agent_path_template (), "main",
