@@ -14,7 +14,6 @@ on:
       - "patches/**"
 
 jobs: 
-jobs: 
   check_version:
     runs-on: ubuntu-22.04
 
