@@ -20,10 +20,10 @@ index 1234567..abcdefg 100644
  				.add_string_value (request_id)
  				.add_string_value ("call")
  				.add_string_value (method)
-@@ -70,7 +70,7 @@ namespace Frida {
+@@ -69,7 +69,7 @@ namespace Frida {
  		}
  
- 		private bool try_handle_rpc_message (string json) {
+ 		public bool try_handle_message (string json) {
 -			if (json.index_of ("\"frida:rpc\"") == -1)
 +			if (json.index_of ("\" florida:rpc\"") == -1)
  				return false;
