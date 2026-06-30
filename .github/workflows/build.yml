@@ -1,6 +1,18 @@
 name: Florida
 
+permissions:
+  contents: write
+
 on:
+  schedule:
+    - cron: "0 9/12 * * *"
+  workflow_dispatch:
+  push:
+    branches: ["main", "ci"]
+    paths:
+      - ".github/workflows/build.yml"
+      - "patches/**"
+
   schedule:
     - cron: "0 9/12 * * *"
   workflow_dispatch:
