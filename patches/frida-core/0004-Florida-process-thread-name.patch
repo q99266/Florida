@@ -3,23 +3,36 @@ From: Florida <florida@example.com>
 Date: Mon, 01 Jul 2026 00:00:00 +0000
 Subject: [PATCH 4/8] Florida: process-thread-name
 
-Randomize process name and main loop thread name to avoid /proc detection.
+Use prctl(PR_SET_NAME) to change /proc/comm and randomize thread name.
 ---
- src/frida-glue.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ src/frida-glue.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/src/frida-glue.c b/src/frida-glue.c
-index 6154034..798cf3a 100644
+index 6154034..a1b2c3d 100644
 --- a/src/frida-glue.c
 +++ b/src/frida-glue.c
-@@ -60,7 +60,9 @@ frida_init_with_runtime (FridaRuntime rt)
+@@ -3,6 +3,10 @@
+ #include <gum/gum.h>
++#include <sys/prctl.h>
++#include <stdlib.h>
++#include <time.h>
++
+ #if defined (HAVE_GIOAPPLE)
+ # include <gioapple.h>
+ #elif defined (HAVE_GIOOPENSSL)
+@@ -60,7 +64,13 @@ frida_init_with_runtime (FridaRuntime rt)
      {
        main_context = g_main_context_ref (g_main_context_default ());
        main_loop = g_main_loop_new (main_context, FALSE);
 -      main_thread = g_thread_new ("frida-main-loop", run_main_loop, NULL);
-+      // Florida: randomize main loop thread name
-+      g_set_prgname ("ggbond");
-+      main_thread = g_thread_new ("ggbond-main", run_main_loop, NULL);
++      /* Florida: randomize process and thread names */
++      static const char *names[] = {"kworker/0:1", "kworker/1:1", "kworker/0:0H",
++        "ksoftirqd/0", "rcu_preempt", "migration/0", "watchdog/0", "systemd"};
++      srand (time (NULL));
++      const char *pname = names[rand () % 8];
++      prctl (PR_SET_NAME, pname);
++      main_thread = g_thread_new (pname, run_main_loop, NULL);
      }
 
      g_once_init_leave (&frida_initialized, TRUE);
