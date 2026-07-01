@@ -9,4 +9,66 @@ Symbols only - no string replacement to preserve D-Bus protocol.
  src/embed-agent.py | 42 ++++++++++++++++++++++++++++++++++++++++++
  1 file changed, 42 insertions(+)
 
-
+diff --git a/src/embed-agent.py b/src/embed-agent.py
+index cfb4a594..89121619 100644
+--- a/src/embed-agent.py
++++ b/src/embed-agent.py
+@@ -3,6 +3,46 @@ import shutil
+ import subprocess
+ import sys
+ import struct
++import random
++import string
++
++
++def random_name(length=10):
++    """Generate random string for anti-detection"""
++    return ''.join(random.choices(string.ascii_lowercase + string.ascii_uppercase, k=length))
++
++
++def apply_anti_frida_patches(agent_path):
++    """Apply anti-frida patches to agent .so file - symbols only, no string replacement"""
++    try:
++        import lief
++    except ImportError:
++        print("[!] lief not installed, skipping anti-frida patches", file=sys.stderr)
++        return
++
++    print(f"[*] Applying anti-frida patches to: {agent_path}")
++
++    binary = lief.parse(str(agent_path))
++    if not binary:
++        print(f"[!] Failed to parse: {agent_path}", file=sys.stderr)
++        return
++
++    # Patch symbols only - rename frida_agent_main to main
++    patched = 0
++    for symbol in binary.symbols:
++        name = symbol.name
++        if not name:
++            continue
++        if name == "frida_agent_main":
++            symbol.name = "main"
++            print(f"    Symbol: frida_agent_main -> main")
++            patched += 1
++
++    if patched > 0:
++        binary.write(str(agent_path))
++        print(f"[*] Patched {patched} symbols in {agent_path}")
++    else:
++        print(f"[*] No symbols to patch in {agent_path}")
+ 
+ 
+ def main(argv):
+@@ -76,6 +116,9 @@ def main(argv):
+             embedded_agent = priv_dir / f"frida-agent-{flavor}.so"
+             if agent is not None:
+                 shutil.copy(agent, embedded_agent)
++                # Florida: apply anti-frida patches to agent (symbols only)
++                if host_os == "android":
++                    apply_anti_frida_patches(embedded_agent)
+             else:
+                 embedded_agent.write_bytes(b"")
+             embedded_assets += [embedded_agent]
+--
+2.34.1
