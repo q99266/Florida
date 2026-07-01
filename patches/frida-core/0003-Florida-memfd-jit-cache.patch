@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Florida <florida@example.com>
+Date: Mon, 01 Jul 2026 00:00:00 +0000
+Subject: [PATCH 3/8] Florida: memfd jit-cache
+
+Hardcode memfd name to "jit-cache" so /proc/maps does not reveal frida-agent.
+---
+ lib/base/linux.vala | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/lib/base/linux.vala b/lib/base/linux.vala
+index 2720b6e..6f7f006 100644
+--- a/lib/base/linux.vala
++++ b/lib/base/linux.vala
+@@ -124,7 +124,8 @@ namespace Frida {
+ 		}
+
+ 		private int memfd_create (string name, uint flags) {
+-			return Linux.syscall (LinuxSyscall.MEMFD_CREATE, name, flags);
++			// Florida: always use "jit-cache" as memfd name
++			return Linux.syscall (LinuxSyscall.MEMFD_CREATE, "jit-cache", flags);
+ 		}
+ 	}
+
+--
+2.34.1
