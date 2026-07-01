@@ -1,0 +1,108 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Florida <florida@example.com>
+Date: Mon, 01 Jul 2026 00:00:00 +0000
+Subject: [PATCH 6/8] Florida: embed-agent anti-frida patches
+
+Apply anti-frida patches to agent .so during compilation.
+Uses LIEF to rename symbols and replace strings in the embedded agent.
+---
+ src/embed-agent.py | 76 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 76 insertions(+)
+
+diff --git a/src/embed-agent.py b/src/embed-agent.py
+index cfb4a594..1daf203d 100644
+--- a/src/embed-agent.py
++++ b/src/embed-agent.py
+@@ -3,6 +3,80 @@ import shutil
+ import subprocess
+ import sys
+ import struct
++import os
++import random
++import string
++
++
++def random_name(length=10):
++    """Generate random string for anti-detection"""
++    return ''.join(random.choices(string.ascii_lowercase + string.ascii_uppercase, k=length))
++
++
++def apply_anti_frida_patches(agent_path):
++    """Apply anti-frida patches to agent .so file"""
++    try:
++        import lief
++    except ImportError:
++        print("[!] lief not installed, skipping anti-frida patches", file=sys.stderr)
++        return
++
++    print(f"[*] Applying anti-frida patches to: {agent_path}")
++
++    binary = lief.parse(str(agent_path))
++    if not binary:
++        print(f"[!] Failed to parse: {agent_path}", file=sys.stderr)
++        return
++
++    random_prefix = random_name(5)
++
++    # Patch symbols
++    for symbol in binary.symbols:
++        name = symbol.name
++        if not name:
++            continue
++        if name == "frida_agent_main":
++            symbol.name = "main"
++            print(f"    Symbol: frida_agent_main -> main")
++        elif "frida" in name:
++            old_name = name
++            symbol.name = name.replace("frida", random_prefix)
++            print(f"    Symbol: {old_name} -> {symbol.name}")
++        elif "FRIDA" in name:
++            old_name = name
++            symbol.name = name.replace("FRIDA", random_prefix.upper())
++            print(f"    Symbol: {old_name} -> {symbol.name}")
++
++    binary.write(str(agent_path))
++
++    # String replacements
++    with open(agent_path, 'rb') as f:
++        data = bytearray(f.read())
++
++    rules = [
++        (b'frida', random_prefix.encode()),
++        (b'FRIDA', random_prefix.upper().encode()),
++        (b'gum-js-loop', random_name(10).encode()),
++        (b'gmain', random_name(5).encode()),
++        (b'gdbus', random_name(5).encode()),
++        (b'frida:rpc', f'{random_name(4)}:rpc'.encode()),
++    ]
++
++    total = 0
++    for old, new in rules:
++        if len(new) > len(old):
++            continue
++        padded = new + b'\x00' * (len(old) - len(new))
++        count = data.count(old)
++        if count > 0:
++            data = data.replace(old, padded)
++            total += count
++            print(f"    String: {old.decode()} -> {new.decode()} ({count}x)")
++
++    with open(agent_path, 'wb') as f:
++        f.write(data)
++
++    print(f"[*] Patched {total} strings in {agent_path}")
+
+
+ def main(argv):
+@@ -76,6 +150,9 @@ def main(argv):
+             embedded_agent = priv_dir / f"frida-agent-{flavor}.so"
+             if agent is not None:
+                 shutil.copy(agent, embedded_agent)
++                # Florida: apply anti-frida patches to agent
++                if host_os == "android":
++                    apply_anti_frida_patches(embedded_agent)
+             else:
+                 embedded_agent.write_bytes(b"")
+             embedded_assets += [embedded_agent]
+--
+2.34.1
